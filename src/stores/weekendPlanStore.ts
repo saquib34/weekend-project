@@ -40,6 +40,7 @@ interface WeekendPlanState {
   updateScheduledActivity: (scheduledActivityId: string, updates: Partial<ScheduledActivity>) => void;
   savePlan: () => Promise<boolean>;
   loadPlan: (planId: string) => void;
+  importPlan: (planData: Partial<WeekendPlan>) => void;
   deletePlan: (planId: string) => void;
   duplicatePlan: (planId: string) => void;
   createTemplate: (planId: string, templateName: string) => void;
@@ -358,6 +359,35 @@ export const useWeekendPlanStore = create<WeekendPlanState>()(
           if (planToLoad) {
             set({ currentPlan: { ...planToLoad } });
           }
+        },
+        
+        importPlan: (planData: Partial<WeekendPlan>) => {
+          const { currentWeekend } = get();
+          
+          const importedPlan: WeekendPlan = {
+            id: generateId(),
+            title: planData.title || 'Imported Plan',
+            description: planData.description || '',
+            createdAt: new Date(),
+            updatedAt: new Date(),
+            mood: planData.mood || 'relaxed',
+            activities: planData.activities || [],
+            budget: planData.budget || {
+              target: 150,
+              currency: 'USD'
+            },
+            startDate: planData.startDate || currentWeekend.saturday,
+            endDate: planData.endDate || currentWeekend.sunday,
+            weekendType: planData.weekendType || 'regular',
+            availableDays: planData.availableDays || ['saturday', 'sunday'],
+            isTemplate: false,
+            shareSettings: {
+              isPublic: false,
+              allowEditing: false
+            }
+          };
+          
+          set({ currentPlan: importedPlan });
         },
         
         deletePlan: (planId: string) => {

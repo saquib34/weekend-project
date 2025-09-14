@@ -81,6 +81,7 @@ function App() {
   const { 
     currentPlan, 
     createNewPlan, 
+    importPlan,
     savePlan,
     addActivityToSchedule 
   } = useWeekendPlanStore();
@@ -94,6 +95,86 @@ function App() {
   useEffect(() => {
     initializeApp();
   }, []);
+
+  // Helper function to show notifications
+  const showNotification = (message: string, type: 'success' | 'error' = 'success') => {
+    const notification = document.createElement('div');
+    notification.innerHTML = type === 'success' ? `✅ ${message}` : `❌ ${message}`;
+    notification.className = `fixed top-4 right-4 ${type === 'success' ? 'bg-green-500' : 'bg-red-500'} text-white px-4 py-2 rounded-lg shadow-lg z-50 transition-all`;
+    document.body.appendChild(notification);
+    
+    setTimeout(() => {
+      notification.style.opacity = '0';
+      setTimeout(() => {
+        if (document.body.contains(notification)) {
+          document.body.removeChild(notification);
+        }
+      }, 300);
+    }, 3000);
+  };
+
+  const [showSharedPlanPreview, setShowSharedPlanPreview] = useState(false);
+  const [sharedPlanData, setSharedPlanData] = useState<any>(null);
+
+  // Handle shared plans from URL
+  useEffect(() => {
+    const handleSharedPlan = async () => {
+      try {
+        const urlParams = new URLSearchParams(window.location.search);
+        const sharedData = urlParams.get('shared');
+        
+        if (sharedData) {
+          const decodedData = decodeURIComponent(sharedData);
+          const sharedPlan = JSON.parse(decodedData);
+          
+          if (sharedPlan && sharedPlan.title && sharedPlan.activities) {
+            // Show preview modal first with the image
+            setSharedPlanData(sharedPlan);
+            setShowSharedPlanPreview(true);
+            
+            // Clean URL after processing
+            window.history.replaceState({}, document.title, window.location.pathname);
+          } else {
+            throw new Error('Invalid shared plan data');
+          }
+        }
+      } catch (error) {
+        console.error('Failed to import shared plan:', error);
+        showNotification('Failed to import shared plan. The link may be invalid.', 'error');
+        
+        // Clean URL even on error
+        window.history.replaceState({}, document.title, window.location.pathname);
+      }
+    };
+
+    handleSharedPlan();
+  }, [importPlan]);
+
+  const handleAcceptSharedPlan = () => {
+    if (sharedPlanData) {
+      // Import the shared plan
+      importPlan({
+        title: `${sharedPlanData.title} (Shared)`,
+        activities: sharedPlanData.activities || [],
+        mood: sharedPlanData.mood || 'relaxed'
+      });
+      
+      // Switch to schedule view to show the imported plan
+      setCurrentView('schedule');
+      
+      // Show success notification
+      showNotification(`Imported shared plan: "${sharedPlanData.title}"`);
+      console.log('Shared plan imported successfully:', sharedPlanData.title);
+    }
+    
+    setShowSharedPlanPreview(false);
+    setSharedPlanData(null);
+  };
+
+  const handleDeclineSharedPlan = () => {
+    setShowSharedPlanPreview(false);
+    setSharedPlanData(null);
+  };
 
   const initializeApp = async () => {
     try {
@@ -706,6 +787,73 @@ function App() {
               plan={currentPlan}
               onClose={() => setShowSharingModal(false)}
             />
+          )}
+
+          {/* Shared Plan Preview Modal */}
+          {showSharedPlanPreview && sharedPlanData && (
+            <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
+              <div className="bg-white rounded-xl max-w-2xl w-full max-h-[90vh] overflow-auto">
+                <div className="p-6">
+                  <h2 className="text-2xl font-bold text-gray-900 mb-4">
+                    Someone shared a weekend plan with you! 🎉
+                  </h2>
+                  
+                  {/* Plan Image */}
+                  {sharedPlanData.imageUrl && (
+                    <div className="mb-6">
+                      <img 
+                        src={sharedPlanData.imageUrl} 
+                        alt="Shared weekend plan"
+                        className="w-full rounded-lg shadow-lg"
+                      />
+                    </div>
+                  )}
+                  
+                  {/* Plan Details */}
+                  <div className="space-y-4 mb-6">
+                    <div>
+                      <h3 className="text-xl font-semibold text-gray-900">
+                        {sharedPlanData.title}
+                      </h3>
+                      {sharedPlanData.mood && (
+                        <p className="text-gray-600">
+                          {sharedPlanData.mood === 'energetic' ? '⚡' : 
+                           sharedPlanData.mood === 'relaxed' ? '😌' : 
+                           sharedPlanData.mood === 'adventurous' ? '🌟' : '😊'} {sharedPlanData.mood} mood
+                        </p>
+                      )}
+                    </div>
+                    
+                    <div>
+                      <p className="text-gray-700">
+                        📅 {sharedPlanData.activities?.length || 0} activities planned
+                      </p>
+                      {sharedPlanData.createdAt && (
+                        <p className="text-sm text-gray-500">
+                          Created {new Date(sharedPlanData.createdAt).toLocaleDateString()}
+                        </p>
+                      )}
+                    </div>
+                  </div>
+                  
+                  {/* Action Buttons */}
+                  <div className="flex gap-3">
+                    <button
+                      onClick={handleAcceptSharedPlan}
+                      className="flex-1 bg-primary-500 text-white px-4 py-2 rounded-lg hover:bg-primary-600 transition-colors"
+                    >
+                      ✨ Import This Plan
+                    </button>
+                    <button
+                      onClick={handleDeclineSharedPlan}
+                      className="px-4 py-2 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 transition-colors"
+                    >
+                      Maybe Later
+                    </button>
+                  </div>
+                </div>
+              </div>
+            </div>
           )}
           
           {/* AI Chat Widget */}

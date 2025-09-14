@@ -32,7 +32,6 @@ export const SocialSharingModal: React.FC<SocialSharingProps> = ({
   const [isGenerating, setIsGenerating] = useState(false);
   const [copySuccess, setCopySuccess] = useState(false);
   const planPreviewRef = useRef<HTMLDivElement>(null);
-  // const { getActivityById } = useActivityStore(); // Removed unused import
 
   useEffect(() => {
     generateShareUrl();
@@ -40,27 +39,35 @@ export const SocialSharingModal: React.FC<SocialSharingProps> = ({
 
   const generateShareUrl = async () => {
     try {
-      // Generate simple shareable URL without backend service
-      const planData = encodeURIComponent(JSON.stringify({
-        id: plan.id,
-        title: plan.title,
-        activities: plan.activities,
-        createdAt: plan.createdAt,
-      }));
+      // First generate the plan image
+      await generatePlanImage();
       
-      const url = `${window.location.origin}?shared=${planData}`;
-      setShareUrl(url);
-      
-      // Generate QR code
-      const qrCode = await QRCode.toDataURL(url, {
-        width: 256,
-        margin: 2,
-        color: {
-          dark: '#1e40af',
-          light: '#ffffff',
-        },
-      });
-      setQrCodeUrl(qrCode);
+      // Wait a moment for the image to be ready
+      setTimeout(async () => {
+        // Generate simple shareable URL without backend service
+        const planData = encodeURIComponent(JSON.stringify({
+          id: plan.id,
+          title: plan.title,
+          activities: plan.activities,
+          createdAt: plan.createdAt,
+          mood: plan.mood,
+          imageUrl: imageUrl // Include the generated image URL
+        }));
+        
+        const url = `${window.location.origin}?shared=${planData}`;
+        setShareUrl(url);
+        
+        // Generate QR code
+        const qrCode = await QRCode.toDataURL(url, {
+          width: 256,
+          margin: 2,
+          color: {
+            dark: '#1e40af',
+            light: '#ffffff',
+          },
+        });
+        setQrCodeUrl(qrCode);
+      }, 1000);
     } catch (error) {
       console.error('Failed to generate share URL:', error);
       // Fallback URL

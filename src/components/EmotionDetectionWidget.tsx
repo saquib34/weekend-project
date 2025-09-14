@@ -21,6 +21,9 @@ export const EmotionDetectionWidget: React.FC<EmotionDetectionWidgetProps> = ({
     hasCamera,
     startDetection,
     stopDetection,
+    startCamera,
+    stopCamera,
+    triggerEmotion,
   } = useEmotionDetection({
     enabled,
     interval: 2000, // Check every 2 seconds
@@ -36,6 +39,30 @@ export const EmotionDetectionWidget: React.FC<EmotionDetectionWidgetProps> = ({
     }
   }, [enabled, isActive, startDetection]);
 
+  // If disabled, show enable option
+  if (!enabled) {
+    return (
+      <div className={`p-4 bg-gray-50 rounded-lg border border-gray-200 ${className}`}>
+        <div className="flex items-center justify-between">
+          <div className="flex items-center gap-2">
+            <div className="text-lg">😊</div>
+            <h3 className="font-medium text-gray-900">Mood Detection</h3>
+            <span className="text-xs text-gray-500 bg-gray-200 px-2 py-1 rounded">Disabled</span>
+          </div>
+          <button
+            onClick={() => setEnabled(true)}
+            className="px-3 py-1 bg-blue-600 text-white rounded text-sm hover:bg-blue-700"
+          >
+            Enable
+          </button>
+        </div>
+        <p className="text-sm text-gray-600 mt-2">
+          Enable mood detection to get personalized activity recommendations based on your current emotional state.
+        </p>
+      </div>
+    );
+  }
+
   const handleEnableCameraDetection = () => {
     setShowPrivacyNotice(false);
     // Camera detection will be handled by the hook
@@ -44,6 +71,17 @@ export const EmotionDetectionWidget: React.FC<EmotionDetectionWidgetProps> = ({
   const handleDisableDetection = () => {
     setEnabled(false);
     stopDetection();
+    stopCamera();
+  };
+
+  const handleAllowCamera = async () => {
+    try {
+      await startCamera();
+      // Start detection after camera is ready
+      setTimeout(() => startDetection(), 500);
+    } catch (error) {
+      console.error('Failed to start camera:', error);
+    }
   };
 
   if (showPrivacyNotice) {
@@ -158,7 +196,7 @@ export const EmotionDetectionWidget: React.FC<EmotionDetectionWidgetProps> = ({
               Camera access needed for emotion detection
             </p>
             <button
-              onClick={startDetection}
+              onClick={handleAllowCamera}
               className="px-3 py-1 bg-blue-600 text-white rounded text-sm hover:bg-blue-700"
             >
               Allow Camera Access
@@ -172,12 +210,18 @@ export const EmotionDetectionWidget: React.FC<EmotionDetectionWidgetProps> = ({
             {hasCamera ? 'Using camera detection' : 'Smart detection active'}
           </div>
           <div className="flex gap-2">
-            {!isActive && hasCamera && (
+            {!isActive && enabled && (
               <button
-                onClick={startDetection}
+                onClick={() => {
+                  if (hasCamera) {
+                    startDetection();
+                  } else {
+                    handleAllowCamera();
+                  }
+                }}
                 className="px-2 py-1 text-xs bg-green-100 text-green-800 rounded hover:bg-green-200"
               >
-                Start
+                {hasCamera ? 'Start' : 'Start Camera'}
               </button>
             )}
             {isActive && (
@@ -194,6 +238,31 @@ export const EmotionDetectionWidget: React.FC<EmotionDetectionWidgetProps> = ({
             >
               Disable
             </button>
+          </div>
+        </div>
+
+        {/* Emotion Test Buttons */}
+        <div className="mt-3 pt-3 border-t border-gray-100">
+          <div className="text-xs text-gray-500 mb-2">Test Different Emotions:</div>
+          <div className="flex flex-wrap gap-1">
+            {[
+              { emotion: 'happy', emoji: '😊', label: 'Happy' },
+              { emotion: 'sad', emoji: '😢', label: 'Sad' },
+              { emotion: 'angry', emoji: '😠', label: 'Angry' },
+              { emotion: 'surprised', emoji: '😲', label: 'Surprised' },
+              { emotion: 'fearful', emoji: '😨', label: 'Fearful' },
+              { emotion: 'neutral', emoji: '😐', label: 'Neutral' },
+            ].map(({ emotion, emoji, label }) => (
+              <button
+                key={emotion}
+                onClick={() => triggerEmotion(emotion as any)}
+                className="px-2 py-1 text-xs bg-purple-50 text-purple-700 rounded hover:bg-purple-100 flex items-center gap-1"
+                title={`Test ${label} emotion`}
+              >
+                <span>{emoji}</span>
+                <span className="hidden sm:inline">{label}</span>
+              </button>
+            ))}
           </div>
         </div>
       </div>

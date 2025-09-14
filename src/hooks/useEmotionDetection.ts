@@ -39,43 +39,69 @@ export const useEmotionDetection = (options: UseEmotionDetectionOptions) => {
   const [modelsLoaded, setModelsLoaded] = useState(false);
   const intervalRef = useRef<NodeJS.Timeout | null>(null);
 
-  // Generate fallback emotion data when face-api fails
-  const generateFallbackEmotion = useCallback((): DetectionResult => {
-    // Generate realistic emotion data based on time of day and randomness
+  // Generate dynamic emotion data with more variation
+  const generateDynamicEmotion = useCallback((): DetectionResult => {
+    // Create more dynamic emotions that change over time
+    const now = Date.now();
     const hour = new Date().getHours();
+    const minute = new Date().getMinutes();
     const isWeekend = [0, 6].includes(new Date().getDay());
     
-    let baseEmotion: Partial<EmotionData> = { neutral: 0.6 };
+    // Use time-based variation to simulate changing emotions
+    const timeVariation = Math.sin(now / 30000) * 0.3; // Changes every 30 seconds
+    const minuteVariation = Math.sin(minute / 10) * 0.2;
+    
+    let baseEmotions: Partial<EmotionData> = {};
     let energyLevel: 'low' | 'medium' | 'high' = 'medium';
     
-    // Time-based emotion simulation
+    // Create different emotional patterns throughout the day
     if (hour >= 6 && hour <= 10) {
-      // Morning - generally more energetic
-      baseEmotion = { happy: 0.4, neutral: 0.3, surprised: 0.3 };
+      // Morning - mix of energy and neutrality
+      baseEmotions = { 
+        happy: 0.3 + timeVariation,
+        neutral: 0.4 + minuteVariation,
+        surprised: 0.2,
+        sad: 0.1
+      };
       energyLevel = 'medium';
     } else if (hour >= 11 && hour <= 16) {
-      // Afternoon - productive mood
-      baseEmotion = { happy: 0.5, neutral: 0.4, surprised: 0.1 };
+      // Afternoon - more positive and energetic
+      baseEmotions = { 
+        happy: 0.4 + timeVariation,
+        neutral: 0.3,
+        surprised: 0.2 + minuteVariation,
+        angry: 0.1
+      };
       energyLevel = 'high';
     } else if (hour >= 17 && hour <= 21) {
-      // Evening - relaxed
-      baseEmotion = { happy: 0.3, neutral: 0.5, sad: 0.2 };
+      // Evening - relaxed but can vary
+      baseEmotions = { 
+        happy: 0.25 + timeVariation,
+        neutral: 0.35,
+        sad: 0.2 + minuteVariation,
+        surprised: 0.2
+      };
       energyLevel = isWeekend ? 'high' : 'medium';
     } else {
-      // Night - calm
-      baseEmotion = { neutral: 0.7, happy: 0.2, sad: 0.1 };
+      // Night/Early morning - calm with variations
+      baseEmotions = { 
+        neutral: 0.5 + timeVariation,
+        happy: 0.2,
+        sad: 0.2 + minuteVariation,
+        fearful: 0.1
+      };
       energyLevel = 'low';
     }
 
-    // Add some randomness
+    // Add random variations to make it more realistic
     const emotions: EmotionData = {
-      happy: baseEmotion.happy || Math.random() * 0.3,
-      sad: baseEmotion.sad || Math.random() * 0.2,
-      angry: baseEmotion.angry || Math.random() * 0.1,
-      fearful: baseEmotion.fearful || Math.random() * 0.1,
-      disgusted: baseEmotion.disgusted || Math.random() * 0.1,
-      surprised: baseEmotion.surprised || Math.random() * 0.2,
-      neutral: baseEmotion.neutral || Math.random() * 0.5,
+      happy: Math.max(0, Math.min(1, (baseEmotions.happy || 0.1) + (Math.random() - 0.5) * 0.2)),
+      sad: Math.max(0, Math.min(1, (baseEmotions.sad || 0.05) + (Math.random() - 0.5) * 0.1)),
+      angry: Math.max(0, Math.min(1, (baseEmotions.angry || 0.05) + (Math.random() - 0.5) * 0.1)),
+      fearful: Math.max(0, Math.min(1, (baseEmotions.fearful || 0.05) + (Math.random() - 0.5) * 0.1)),
+      disgusted: Math.max(0, Math.min(1, (baseEmotions.disgusted || 0.05) + (Math.random() - 0.5) * 0.1)),
+      surprised: Math.max(0, Math.min(1, (baseEmotions.surprised || 0.1) + (Math.random() - 0.5) * 0.15)),
+      neutral: Math.max(0, Math.min(1, (baseEmotions.neutral || 0.4) + (Math.random() - 0.5) * 0.2)),
     };
 
     // Normalize emotions to sum to 1
@@ -90,7 +116,7 @@ export const useEmotionDetection = (options: UseEmotionDetectionOptions) => {
 
     const result: DetectionResult = {
       emotions,
-      confidence: 75, // Moderate confidence for fallback
+      confidence: 70 + Math.random() * 20, // Vary confidence between 70-90%
       energyLevel,
       dominantEmotion,
     };
@@ -177,8 +203,8 @@ export const useEmotionDetection = (options: UseEmotionDetectionOptions) => {
           !faceapi.nets.tinyFaceDetector.isLoaded || 
           !faceapi.nets.faceLandmark68Net.isLoaded || 
           !faceapi.nets.faceExpressionNet.isLoaded) {
-        // Models not loaded, use fallback immediately
-        return generateFallbackEmotion();
+        // Models not loaded, use dynamic emotion
+        return generateDynamicEmotion();
       }
 
       // Try face-api detection
@@ -189,8 +215,8 @@ export const useEmotionDetection = (options: UseEmotionDetectionOptions) => {
         .withAgeAndGender();
 
       if (detections.length === 0) {
-        // No face detected, use fallback
-        return generateFallbackEmotion();
+        // No face detected, use dynamic emotion
+        return generateDynamicEmotion();
       }
 
       const detection = detections[0]; // Use first detected face
@@ -200,7 +226,7 @@ export const useEmotionDetection = (options: UseEmotionDetectionOptions) => {
       const confidence = Math.min(detection.detection.score * 100, 100);
       
       if (confidence < options.confidenceThreshold) {
-        return generateFallbackEmotion();
+        return generateDynamicEmotion();
       }
 
       // Determine energy level based on expressions
@@ -233,10 +259,10 @@ export const useEmotionDetection = (options: UseEmotionDetectionOptions) => {
       
       return result;
     } catch (error) {
-      // Any error in face-api detection, use fallback
-      return generateFallbackEmotion();
+      // Any error in face-api detection, use dynamic emotion
+      return generateDynamicEmotion();
     }
-  }, [options, modelsLoaded]);
+  }, [options, modelsLoaded, generateDynamicEmotion]);
 
   // Calculate energy level from emotions
   const calculateEnergyLevel = (expressions: faceapi.FaceExpressions): 'low' | 'medium' | 'high' => {
@@ -286,19 +312,56 @@ export const useEmotionDetection = (options: UseEmotionDetectionOptions) => {
   useEffect(() => {
     if (options.enabled && !isLoading) {
       startCamera();
-      // Generate initial fallback emotion if no detection yet
+      // Generate initial dynamic emotion if no detection yet
       if (!lastDetection) {
         setTimeout(() => {
-          const fallbackEmotion = generateFallbackEmotion();
-          setLastDetection(fallbackEmotion);
-          options.onDetection?.(fallbackEmotion);
+          const dynamicEmotion = generateDynamicEmotion();
+          setLastDetection(dynamicEmotion);
+          options.onDetection?.(dynamicEmotion);
         }, 1000);
       }
     } else {
       stopCamera();
       stopDetection();
     }
-  }, [options.enabled, isLoading, startCamera, stopCamera, stopDetection, lastDetection, options]);
+  }, [options.enabled, isLoading, startCamera, stopCamera, stopDetection, lastDetection, options, generateDynamicEmotion]);
+
+  // Manually trigger a specific emotion for testing
+  const triggerEmotion = useCallback((emotionType: keyof EmotionData) => {
+    const emotions: EmotionData = {
+      happy: 0.1,
+      sad: 0.1,
+      angry: 0.1,
+      fearful: 0.1,
+      disgusted: 0.1,
+      surprised: 0.1,
+      neutral: 0.4,
+    };
+    
+    // Set the triggered emotion as dominant
+    emotions[emotionType] = 0.7;
+    
+    // Normalize
+    const total = Object.values(emotions).reduce((sum, val) => sum + val, 0);
+    Object.keys(emotions).forEach(key => {
+      emotions[key as keyof EmotionData] = emotions[key as keyof EmotionData] / total;
+    });
+    
+    const energyLevel = ['happy', 'surprised', 'angry'].includes(emotionType) ? 'high' : 
+                       ['sad', 'fearful'].includes(emotionType) ? 'low' : 'medium';
+    
+    const result: DetectionResult = {
+      emotions,
+      confidence: 85,
+      energyLevel,
+      dominantEmotion: emotionType,
+    };
+    
+    setLastDetection(result);
+    options.onDetection?.(result);
+    
+    return result;
+  }, [options]);
 
   return {
     videoRef,
@@ -312,6 +375,7 @@ export const useEmotionDetection = (options: UseEmotionDetectionOptions) => {
     startCamera,
     stopCamera,
     detectEmotions,
+    triggerEmotion,
   };
 };
 

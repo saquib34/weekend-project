@@ -8,7 +8,7 @@ import type { WeekendPlan, Activity, AIRecommendation } from '../types';
  */
 export const useAIRecommendations = () => {
   const { currentPlan } = useWeekendPlanStore();
-  const { getActivityById } = useActivityStore();
+  // const { getActivityById } = useActivityStore(); // Removed unused
   const [loading, setLoading] = useState(false);
   const [recommendations, setRecommendations] = useState<AIRecommendation[]>([]);
   const [error, setError] = useState<string | null>(null);
@@ -152,6 +152,8 @@ export const useWeatherIntegration = () => {
     
     try {
       // Mock weather data - in real app, this would call a weather API
+      // Location parameter is for future use when implementing real weather API
+      console.log('Weather location:', location);
       await new Promise(resolve => setTimeout(resolve, 1000));
       
       setWeather({
@@ -178,16 +180,29 @@ export const useWeatherIntegration = () => {
 
     // Filter activities based on weather conditions
     return activities.filter(activity => {
-      if (activity.weatherSuitability === 'any' || activity.weatherSuitability === 'indoor-only') {
+      const weatherSuitability = activity.weatherSuitability;
+      
+      // Activities that work in any weather
+      if (weatherSuitability === 'any') {
         return true;
       }
       
-      // Simple weather matching
-      if (weather.saturday.condition === 'sunny' && activity.weatherSuitability === 'sunny') {
+      // Indoor activities work regardless of weather
+      if (weatherSuitability === 'indoor-only') {
         return true;
       }
       
-      if (weather.saturday.condition === 'rainy' && activity.weatherSuitability === 'indoor-only') {
+      // Match specific weather conditions
+      const saturdayCondition = weather.saturday.condition;
+      if (saturdayCondition === 'sunny' && weatherSuitability === 'sunny') {
+        return true;
+      }
+      
+      if (saturdayCondition === 'rainy' && weatherSuitability === 'rainy') {
+        return true;
+      }
+      
+      if (saturdayCondition === 'cloudy' && weatherSuitability === 'cloudy') {
         return true;
       }
       

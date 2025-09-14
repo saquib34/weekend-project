@@ -34,7 +34,7 @@ const defaultFilters = {
 
 export const useUIStore = create<UIStore>()(
   persist(
-    (set, get) => ({
+    (set) => ({
       // Initial state
       activeView: 'browse',
       sidebarOpen: true,

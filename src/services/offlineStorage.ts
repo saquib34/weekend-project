@@ -2,10 +2,11 @@
 
 import type { WeekendPlan } from '../types';
 
-interface OfflineStorageEvent {
-  type: 'sync-required' | 'sync-complete' | 'sync-failed' | 'storage-full';
-  data?: any;
-}
+// Unused interface - keeping for future implementation
+// interface OfflineStorageEvent {
+//   type: 'sync-required' | 'sync-complete' | 'sync-failed' | 'storage-full';
+//   data?: any;
+// }
 
 interface SyncStatus {
   lastSync: Date;
@@ -150,7 +151,8 @@ class OfflineStorageService {
         
         // Filter and clean up plans
         const cleanPlans = plans.map(plan => {
-          const { syncStatus, lastModified, offlineVersion, ...cleanPlan } = plan;
+          // Remove any sync-related properties that might exist
+          const { syncStatus, ...cleanPlan } = plan;
           return cleanPlan as WeekendPlan;
         });
 

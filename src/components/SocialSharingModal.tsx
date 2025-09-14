@@ -10,7 +10,7 @@ import {
   TwitterIcon,
   FacebookIcon 
 } from 'react-share';
-import type { WeekendPlan, ScheduledActivity } from '../types';
+import type { WeekendPlan } from '../types';
 import { useActivityStore } from '../stores/activityStore';
 import { Button } from './ui/Button';
 
@@ -32,7 +32,7 @@ export const SocialSharingModal: React.FC<SocialSharingProps> = ({
   const [isGenerating, setIsGenerating] = useState(false);
   const [copySuccess, setCopySuccess] = useState(false);
   const planPreviewRef = useRef<HTMLDivElement>(null);
-  const { getActivityById } = useActivityStore();
+  // const { getActivityById } = useActivityStore(); // Removed unused import
 
   useEffect(() => {
     generateShareUrl();
@@ -220,7 +220,7 @@ export const SocialSharingModal: React.FC<SocialSharingProps> = ({
                       <TwitterIcon size={48} round />
                     </TwitterShareButton>
                     
-                    <FacebookShareButton url={shareUrl} quote={shareText}>
+                    <FacebookShareButton url={shareUrl}>
                       <FacebookIcon size={48} round />
                     </FacebookShareButton>
                   </div>

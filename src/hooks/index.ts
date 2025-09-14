@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react';
 import { useActivityStore } from '../stores/activityStore';
 import { useWeekendPlanStore } from '../stores/weekendPlanStore';
-import type { Activity, WeekendMood, ActivityCategory } from '../types';
+import type { Activity } from '../types';
 
 /**
  * Hook for managing activity browsing, filtering, and selection

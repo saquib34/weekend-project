@@ -1,6 +1,6 @@
 import { create } from 'zustand';
 import { subscribeWithSelector, persist } from 'zustand/middleware';
-import type { Activity, ActivityCategory, WeekendMood, TimeSlot, FilterOptions } from '../types';
+import type { Activity, ActivityCategory, WeekendMood, FilterOptions } from '../types';
 import { activities, getActivitiesByCategory, getActivitiesByMood, searchActivities } from '../data/activities';
 
 interface ActivityState {

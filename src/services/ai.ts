@@ -1,5 +1,5 @@
 import { GoogleGenerativeAI } from '@google/generative-ai';
-import type { Activity, WeekendMood, WeekendPlan, PlanSuggestion } from '../types';
+import type { Activity, WeekendMood, PlanSuggestion } from '../types';
 
 // Types for AI responses
 export interface AIConversation {
@@ -108,7 +108,7 @@ class WeekendAI {
 
     try {
       const prompt = `
-        Explain why this activity was recommended for a ${context.mood} weekend:
+        Explain why activity ${activityId} was recommended for a ${context.mood} weekend:
         
         Context: ${JSON.stringify(context, null, 2)}
         
@@ -286,6 +286,7 @@ class WeekendAI {
   }
 
   private getFallbackConversationResponse(message: string): string {
+    console.log('Generating fallback response for:', message);
     const responses = [
       "That sounds great! What kind of mood are you going for this weekend?",
       "I'd love to help you plan something amazing! Tell me more about your preferences.",

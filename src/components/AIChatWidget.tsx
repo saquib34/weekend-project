@@ -2,6 +2,7 @@ import React, { useState, useRef, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { weekendAI } from '../services/ai';
 import { Button } from './ui/Button';
+import type { WeekendMood } from '../types';
 
 interface ChatMessage {
   id: string;
@@ -13,7 +14,7 @@ interface ChatMessage {
 interface AIChatWidgetProps {
   isOpen: boolean;
   onClose: () => void;
-  currentMood?: string;
+  currentMood?: WeekendMood;
   currentWeather?: any;
 }
 

@@ -77,7 +77,7 @@ export interface Activity {
 export interface ScheduledActivity {
   id: string;
   activityId: string;
-  day: 'saturday' | 'sunday';
+  day: 'friday' | 'saturday' | 'sunday' | 'monday'; // Extended for long weekends
   timeSlot: TimeSlot;
   startTime?: string; // Custom time like "10:30 AM"
   endTime?: string;
@@ -90,6 +90,8 @@ export interface ScheduledActivity {
   };
 }
 
+export type WeekendType = 'regular' | 'long' | 'extended'; // regular = 2 days, long = 3 days, extended = 4+ days
+
 export interface WeekendPlan {
   id: string;
   title: string;
@@ -98,16 +100,17 @@ export interface WeekendPlan {
   updatedAt: Date;
   mood: WeekendMood;
   theme?: string;
+  weekendType: WeekendType; // New field for weekend length
+  startDate: Date; // Start date of the weekend
+  endDate: Date; // End date of the weekend
+  availableDays: ('friday' | 'saturday' | 'sunday' | 'monday')[]; // Which days are available
   activities: ScheduledActivity[];
   budget?: {
     target: number;
     actual?: number;
     currency: string;
   };
-  weather?: {
-    saturday: WeatherCondition;
-    sunday: WeatherCondition;
-  };
+  weather?: Record<string, WeatherCondition>; // Weather for each day
   collaborators?: string[]; // User IDs for shared planning
   isTemplate: boolean;
   templateCategory?: string;
@@ -116,6 +119,8 @@ export interface WeekendPlan {
     shareCode?: string;
     allowEditing: boolean;
   };
+  externalEvents?: string[]; // IDs of external events included
+  externalPlaces?: string[]; // IDs of external places included
 }
 
 export interface WeatherCondition {

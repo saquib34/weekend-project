@@ -17,7 +17,8 @@ import { useUIStore } from './stores/uiStore';
 import { useEmotionBasedRecommendations, type DetectionResult } from './hooks/useEmotionDetection';
 import { weatherService, getWeatherIcon, getWeatherDescription, type WeatherData } from './services/weather';
 import { pwaService } from './services/pwa';
-import type { WeekendMood, WeekendDay, TimeSlot } from './types';
+import { LongWeekendSuggestions } from './components/LongWeekendSuggestions';
+import type { WeekendMood, WeekendDay, TimeSlot, WeekendType } from './types';
 import './index.css';
 
 // Error Boundary Component
@@ -74,6 +75,8 @@ function App() {
   const [currentWeather, setCurrentWeather] = useState<WeatherData | null>(null);
   const [emotionRecommendations, setEmotionRecommendations] = useState<string[]>([]);
   const [isOnline, setIsOnline] = useState(navigator.onLine);
+  const [selectedWeekendType, setSelectedWeekendType] = useState<WeekendType>('regular');
+  const [selectedStartDate, setSelectedStartDate] = useState<Date>(new Date());
   
   const { 
     currentPlan, 
@@ -153,8 +156,34 @@ function App() {
     });
   }, [getRecommendationsByEmotion]);
 
-  const handleCreatePlan = useCallback(async (mood: WeekendMood, title: string) => {
-    createNewPlan(mood, title);
+  const handleCreatePlan = useCallback(async (mood: WeekendMood, title: string, weekendType: WeekendType = 'regular', startDate: Date = new Date()) => {
+    // Calculate end date and available days based on weekend type
+    const endDate = new Date(startDate);
+    let availableDays: ('friday' | 'saturday' | 'sunday' | 'monday')[] = [];
+    
+    switch (weekendType) {
+      case 'long':
+        // 3-day weekend (Friday-Sunday or Saturday-Monday)
+        if (startDate.getDay() === 5) { // Friday
+          endDate.setDate(startDate.getDate() + 2);
+          availableDays = ['friday', 'saturday', 'sunday'];
+        } else {
+          endDate.setDate(startDate.getDate() + 2);
+          availableDays = ['saturday', 'sunday', 'monday'];
+        }
+        break;
+      case 'extended':
+        // 4-day weekend (Friday-Monday)
+        endDate.setDate(startDate.getDate() + 3);
+        availableDays = ['friday', 'saturday', 'sunday', 'monday'];
+        break;
+      default:
+        // Regular weekend (Saturday-Sunday)
+        endDate.setDate(startDate.getDate() + 1);
+        availableDays = ['saturday', 'sunday'];
+    }
+
+    createNewPlan(mood, title, weekendType, startDate, endDate, availableDays);
     setShowCreateModal(false);
     setCurrentView('schedule');
 
@@ -162,7 +191,7 @@ function App() {
     if (currentWeather) {
       try {
         // For now, just log that we would get AI recommendations
-        console.log('Would get AI recommendations for mood:', mood, 'weather:', currentWeather);
+        console.log('Would get AI recommendations for mood:', mood, 'weather:', currentWeather, 'weekend type:', weekendType);
       } catch (error) {
         console.error('Failed to get AI recommendations:', error);
       }
@@ -223,6 +252,12 @@ function App() {
     { value: 'productive', label: 'Productive', emoji: '💪' },
     { value: 'spontaneous', label: 'Spontaneous', emoji: '🎲' },
     { value: 'peaceful', label: 'Peaceful', emoji: '🧘' },
+  ];
+
+  const weekendTypes: { value: WeekendType; label: string; emoji: string; description: string }[] = [
+    { value: 'regular', label: 'Regular Weekend', emoji: '📅', description: 'Saturday & Sunday (2 days)' },
+    { value: 'long', label: 'Long Weekend', emoji: '🎊', description: 'Friday-Sunday or Saturday-Monday (3 days)' },
+    { value: 'extended', label: 'Extended Weekend', emoji: '🌟', description: 'Friday-Monday (4 days)' },
   ];
 
   return (
@@ -564,14 +599,14 @@ function App() {
                   initial={{ scale: 0.9, opacity: 0 }}
                   animate={{ scale: 1, opacity: 1 }}
                   exit={{ scale: 0.9, opacity: 0 }}
-                  className="bg-white rounded-2xl p-6 w-full max-w-md mx-4"
+                  className="bg-white rounded-2xl p-6 w-full max-w-2xl mx-4 max-h-[90vh] overflow-y-auto"
                   onClick={(e) => e.stopPropagation()}
                 >
                   <h2 className="text-2xl font-bold text-gray-900 mb-6">
                     Create Weekend Plan
                   </h2>
                   
-                  <div className="space-y-4">
+                  <div className="space-y-6">
                     <div>
                       <label className="block text-sm font-medium text-gray-700 mb-2">
                         Plan Title
@@ -581,6 +616,61 @@ function App() {
                         placeholder="My Awesome Weekend"
                         className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent"
                         id="plan-title"
+                      />
+                    </div>
+
+                    {/* Weekend Type Selector */}
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 mb-3">
+                        Weekend Type
+                      </label>
+                      <div className="grid grid-cols-1 gap-2">
+                        {weekendTypes.map((type) => (
+                          <button
+                            key={type.value}
+                            onClick={() => setSelectedWeekendType(type.value)}
+                            className={`flex items-center gap-3 p-3 border rounded-lg hover:border-primary-300 transition-all text-left ${
+                              selectedWeekendType === type.value
+                                ? 'border-primary-500 bg-primary-50'
+                                : 'border-gray-200'
+                            }`}
+                          >
+                            <span className="text-xl">{type.emoji}</span>
+                            <div>
+                              <div className="text-sm font-medium">{type.label}</div>
+                              <div className="text-xs text-gray-500">{type.description}</div>
+                            </div>
+                          </button>
+                        ))}
+                      </div>
+                    </div>
+
+                    {/* Start Date Selector */}
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 mb-2">
+                        Start Date
+                      </label>
+                      <input
+                        type="date"
+                        className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent"
+                        id="start-date"
+                        min={new Date().toISOString().split('T')[0]}
+                        defaultValue={selectedStartDate.toISOString().split('T')[0]}
+                        onChange={(e) => setSelectedStartDate(new Date(e.target.value))}
+                      />
+                    </div>
+
+                    {/* Holiday Suggestions */}
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 mb-3">
+                        🎊 Holiday Opportunities
+                      </label>
+                      <LongWeekendSuggestions 
+                        onSelectWeekend={(opportunity) => {
+                          setSelectedWeekendType(opportunity.weekendType);
+                          setSelectedStartDate(opportunity.startDate);
+                        }}
+                        className="w-full"
                       />
                     </div>
                     
@@ -594,7 +684,8 @@ function App() {
                             key={mood.value}
                             onClick={() => {
                               const title = (document.getElementById('plan-title') as HTMLInputElement)?.value || 'My Weekend Plan';
-                              handleCreatePlan(mood.value, title);
+                              const startDate = new Date((document.getElementById('start-date') as HTMLInputElement)?.value || new Date());
+                              handleCreatePlan(mood.value, title, selectedWeekendType, startDate);
                             }}
                             className="flex items-center gap-2 p-3 border border-gray-200 rounded-lg hover:border-primary-300 hover:bg-primary-50 transition-all text-left"
                           >

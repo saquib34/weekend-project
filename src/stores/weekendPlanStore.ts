@@ -1,6 +1,6 @@
 import { create } from 'zustand';
 import { subscribeWithSelector, persist } from 'zustand/middleware';
-import type { WeekendPlan, ScheduledActivity, WeekendMood, WeekendDay, TimeSlot } from '../types';
+import type { WeekendPlan, ScheduledActivity, WeekendMood, WeekendDay, TimeSlot, WeekendType } from '../types';
 import { format } from 'date-fns';
 import { offlineStorageService } from '../services/offlineStorage';
 import { activities } from '../data/activities';
@@ -22,7 +22,14 @@ interface WeekendPlanState {
   };
   
   // Actions
-  createNewPlan: (mood: WeekendMood, title?: string) => void;
+  createNewPlan: (
+    mood: WeekendMood, 
+    title?: string, 
+    weekendType?: WeekendType,
+    startDate?: Date,
+    endDate?: Date,
+    availableDays?: ('friday' | 'saturday' | 'sunday' | 'monday')[]
+  ) => void;
   updatePlanTitle: (title: string) => void;
   updatePlanDescription: (description: string) => void;
   updatePlanMood: (mood: WeekendMood) => void;
@@ -77,11 +84,22 @@ export const useWeekendPlanStore = create<WeekendPlanState>()(
         templates: [],
         currentWeekend: getNextWeekend(),
         
-        createNewPlan: (mood: WeekendMood, title?: string) => {
+        createNewPlan: (
+          mood: WeekendMood, 
+          title?: string, 
+          weekendType: WeekendType = 'regular',
+          startDate?: Date,
+          endDate?: Date,
+          availableDays?: ('friday' | 'saturday' | 'sunday' | 'monday')[]
+        ) => {
           const { currentWeekend } = get();
+          const planStartDate = startDate || currentWeekend.saturday;
+          const planEndDate = endDate || currentWeekend.sunday;
+          const planAvailableDays = availableDays || ['saturday', 'sunday'];
+          
           const newPlan: WeekendPlan = {
             id: generateId(),
-            title: title || `${format(currentWeekend.saturday, 'MMM d')} Weekend Plan`,
+            title: title || `${format(planStartDate, 'MMM d')} Weekend Plan`,
             description: '',
             createdAt: new Date(),
             updatedAt: new Date(),
@@ -96,6 +114,10 @@ export const useWeekendPlanStore = create<WeekendPlanState>()(
               isPublic: false,
               allowEditing: false,
             },
+            weekendType,
+            startDate: planStartDate,
+            endDate: planEndDate,
+            availableDays: planAvailableDays,
           };
           
           set({ currentPlan: newPlan });

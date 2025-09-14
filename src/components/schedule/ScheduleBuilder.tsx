@@ -6,11 +6,13 @@ import { useWeekendPlanStore } from '../../stores/weekendPlanStore';
 import { useActivityStore } from '../../stores/activityStore';
 import { ActivityCard } from '../activities/ActivityCard';
 import { Button } from '../ui/Button';
+import { InteractiveMap } from '../map/InteractiveMap';
 import { cn } from '../../utils/cn';
 import { format } from 'date-fns';
 
 const ScheduleBuilder: React.FC = () => {
   const [isSaving, setIsSaving] = useState(false);
+  const [activeTab, setActiveTab] = useState<'schedule' | 'map'>('schedule');
   
   const {
     currentPlan,
@@ -284,13 +286,44 @@ const ScheduleBuilder: React.FC = () => {
 
         {/* Quick Stats */}
         <div className="border-t border-gray-200 p-4">
-          <div className="flex items-center justify-between text-sm text-gray-600">
+          <div className="flex items-center justify-between text-sm text-gray-600 mb-4">
             <span>
               {currentPlan.activities.length} activities planned
             </span>
             <span>
               Mood: {currentPlan.mood}
             </span>
+          </div>
+
+          {/* Map Toggle Button */}
+          <div className="border-t pt-4">
+            <button
+              onClick={() => setActiveTab(activeTab === 'map' ? 'schedule' : 'map')}
+              className="w-full flex items-center justify-between p-3 bg-gray-50 hover:bg-gray-100 rounded-lg transition-colors"
+            >
+              <div className="flex items-center gap-2">
+                <span className="text-lg">🗺️</span>
+                <span className="font-medium">
+                  {activeTab === 'map' ? 'Hide Map View' : 'Show Map View'}
+                </span>
+              </div>
+              <span className="text-gray-400">
+                {activeTab === 'map' ? '▼' : '▶'}
+              </span>
+            </button>
+
+            {/* Map View */}
+            {activeTab === 'map' && (
+              <div className="mt-4">
+                <InteractiveMap
+                  activities={currentPlan.activities}
+                  showRoute={true}
+                  showNearbyPlaces={true}
+                  height="300px"
+                  className="rounded-lg"
+                />
+              </div>
+            )}
           </div>
         </div>
       </div>

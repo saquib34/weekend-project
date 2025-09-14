@@ -30,13 +30,12 @@ export interface LocationCoords {
 }
 
 class WeatherService {
-  private apiKey: string;
-  private baseUrl = 'https://api.openweathermap.org/data/2.5';
+  private baseUrl = 'https://api.open-meteo.com/v1'; // Free API, no key required
   private cache = new Map<string, { data: any; timestamp: number }>();
   private cacheTimeout = 10 * 60 * 1000; // 10 minutes
 
-  constructor(apiKey?: string) {
-    this.apiKey = apiKey || import.meta.env.VITE_OPENWEATHER_API_KEY || '';
+  constructor() {
+    // No API key needed for Open-Meteo
   }
 
   /**
@@ -76,13 +75,9 @@ class WeatherService {
     const cached = this.getCachedData(cacheKey);
     if (cached) return this.parseWeatherData(cached);
 
-    if (!this.apiKey) {
-      return this.getMockWeatherData('current');
-    }
-
     try {
       const response = await fetch(
-        `${this.baseUrl}/weather?lat=${location.latitude}&lon=${location.longitude}&appid=${this.apiKey}&units=metric`
+        `${this.baseUrl}/forecast?latitude=${location.latitude}&longitude=${location.longitude}&current=temperature_2m,relative_humidity_2m,precipitation,weather_code,wind_speed_10m,uv_index&timezone=auto`
       );
 
       if (!response.ok) {
@@ -91,7 +86,7 @@ class WeatherService {
 
       const data = await response.json();
       this.setCachedData(cacheKey, data);
-      return this.parseWeatherData(data);
+      return this.parseCurrentWeatherData(data);
     } catch (error) {
       console.warn('Failed to fetch real weather data, using mock data:', error);
       return this.getMockWeatherData('current');
@@ -99,20 +94,16 @@ class WeatherService {
   }
 
   /**
-   * Get weekend forecast (5-day forecast filtered for Saturday/Sunday)
+   * Get weekend forecast (7-day forecast filtered for Saturday/Sunday)
    */
   async getWeekendForecast(location: LocationCoords): Promise<WeatherForecast> {
     const cacheKey = `forecast-${location.latitude}-${location.longitude}`;
     const cached = this.getCachedData(cacheKey);
     if (cached) return this.parseWeatherForecast(cached);
 
-    if (!this.apiKey) {
-      return this.getMockWeatherForecast();
-    }
-
     try {
       const response = await fetch(
-        `${this.baseUrl}/forecast?lat=${location.latitude}&lon=${location.longitude}&appid=${this.apiKey}&units=metric`
+        `${this.baseUrl}/forecast?latitude=${location.latitude}&longitude=${location.longitude}&daily=temperature_2m_max,temperature_2m_min,precipitation_sum,weather_code,wind_speed_10m_max,uv_index_max&current=temperature_2m,relative_humidity_2m,precipitation,weather_code,wind_speed_10m,uv_index&timezone=auto&forecast_days=7`
       );
 
       if (!response.ok) {
@@ -266,62 +257,145 @@ class WeatherService {
     return suggestions;
   }
 
-  private parseWeatherData(data: any): WeatherData {
+  private parseCurrentWeatherData(data: any): WeatherData {
+    const current = data.current;
+    const condition = this.mapWeatherCodeToCondition(current.weather_code);
     return {
-      condition: this.mapWeatherCondition(data.weather[0].main),
-      temperature: Math.round(data.main.temp),
-      humidity: data.main.humidity,
-      windSpeed: Math.round((data.wind?.speed || 0) * 3.6), // Convert m/s to km/h
+      condition,
+      temperature: Math.round(current.temperature_2m),
+      humidity: current.relative_humidity_2m || 65,
+      windSpeed: Math.round(current.wind_speed_10m || 0),
+      precipitation: current.precipitation || 0,
+      uvIndex: current.uv_index || 0,
+      visibility: 10, // Open-Meteo doesn't provide visibility, default to 10km
+      description: this.getWeatherCodeDescription(current.weather_code),
+      icon: this.getWeatherCodeIcon(current.weather_code),
+    };
+  }
+
+  private mapWeatherCodeToCondition(code: number): WeatherData['condition'] {
+    // Open-Meteo weather codes
+    if (code === 0) return 'sunny';
+    if (code === 1 || code === 2) return 'partly-cloudy';
+    if (code === 3) return 'cloudy';
+    if (code >= 45 && code <= 48) return 'foggy';
+    if (code >= 51 && code <= 67) return 'rainy';
+    if (code >= 71 && code <= 77) return 'snowy';
+    if (code >= 80 && code <= 82) return 'rainy';
+    if (code >= 85 && code <= 86) return 'snowy';
+    if (code >= 95 && code <= 99) return 'stormy';
+    return 'partly-cloudy';
+  }
+
+  private getWeatherCodeDescription(code: number): string {
+    const descriptions: Record<number, string> = {
+      0: 'Clear sky',
+      1: 'Mainly clear',
+      2: 'Partly cloudy',
+      3: 'Overcast',
+      45: 'Fog',
+      48: 'Depositing rime fog',
+      51: 'Light drizzle',
+      53: 'Moderate drizzle',
+      55: 'Dense drizzle',
+      61: 'Slight rain',
+      63: 'Moderate rain',
+      65: 'Heavy rain',
+      71: 'Slight snow',
+      73: 'Moderate snow',
+      75: 'Heavy snow',
+      95: 'Thunderstorm',
+      96: 'Thunderstorm with hail',
+      99: 'Thunderstorm with heavy hail'
+    };
+    return descriptions[code] || 'Unknown weather';
+  }
+
+  private getWeatherCodeIcon(code: number): string {
+    if (code === 0) return '01d';
+    if (code === 1 || code === 2) return '02d';
+    if (code === 3) return '04d';
+    if (code >= 45 && code <= 48) return '50d';
+    if (code >= 51 && code <= 67) return '10d';
+    if (code >= 71 && code <= 77) return '13d';
+    if (code >= 80 && code <= 82) return '09d';
+    if (code >= 85 && code <= 86) return '13d';
+    if (code >= 95 && code <= 99) return '11d';
+    return '02d';
+  }
+
+  private parseWeatherData(data: any): WeatherData {
+    // This method is kept for compatibility but redirects to new parsing
+    if (data.current) {
+      return this.parseCurrentWeatherData(data);
+    }
+    // Fallback for old API format or mock data
+    return {
+      condition: this.mapWeatherCondition(data.weather?.[0]?.main || 'Clear'),
+      temperature: Math.round(data.main?.temp || 22),
+      humidity: data.main?.humidity || 65,
+      windSpeed: Math.round((data.wind?.speed || 0) * 3.6),
       precipitation: data.rain?.['1h'] || data.snow?.['1h'] || 0,
       uvIndex: data.uvi || 0,
-      visibility: Math.round((data.visibility || 10000) / 1000), // Convert m to km
-      description: data.weather[0].description,
-      icon: data.weather[0].icon,
+      visibility: Math.round((data.visibility || 10000) / 1000),
+      description: data.weather?.[0]?.description || 'Clear sky',
+      icon: data.weather?.[0]?.icon || '01d',
     };
   }
 
   private parseWeatherForecast(data: any): WeatherForecast {
-    const current = this.parseWeatherData(data.list[0]);
+    // Get current weather from the response
+    const current = this.parseCurrentWeatherData(data);
     
-    // Find Saturday and Sunday forecasts (using noon forecasts as representative)
+    // Find Saturday and Sunday from daily forecasts
     const now = new Date();
-    const saturday = new Date(now);
-    saturday.setDate(now.getDate() + ((6 - now.getDay()) % 7));
-    const sunday = new Date(saturday);
-    sunday.setDate(saturday.getDate() + 1);
+    const dayOfWeek = now.getDay(); // 0 = Sunday, 6 = Saturday
+    
+    // Calculate days until next Saturday (0-6)
+    const daysUntilSaturday = dayOfWeek === 0 ? 6 : 6 - dayOfWeek;
+    const saturdayIndex = daysUntilSaturday;
+    const sundayIndex = daysUntilSaturday + 1;
 
-    const saturdayForecast = this.findClosestForecast(data.list, saturday);
-    const sundayForecast = this.findClosestForecast(data.list, sunday);
+    const daily = data.daily;
+    
+    const saturday: WeatherData = {
+      condition: this.mapWeatherCodeToCondition(daily.weather_code[saturdayIndex]),
+      temperature: Math.round(daily.temperature_2m_max[saturdayIndex]),
+      humidity: 65, // Default as Open-Meteo doesn't provide daily humidity
+      windSpeed: Math.round(daily.wind_speed_10m_max[saturdayIndex] || 0),
+      precipitation: daily.precipitation_sum[saturdayIndex] || 0,
+      uvIndex: daily.uv_index_max[saturdayIndex] || 0,
+      visibility: 10,
+      description: this.getWeatherCodeDescription(daily.weather_code[saturdayIndex]),
+      icon: this.getWeatherCodeIcon(daily.weather_code[saturdayIndex]),
+    };
+
+    const sunday: WeatherData = {
+      condition: this.mapWeatherCodeToCondition(daily.weather_code[sundayIndex]),
+      temperature: Math.round(daily.temperature_2m_max[sundayIndex]),
+      humidity: 65,
+      windSpeed: Math.round(daily.wind_speed_10m_max[sundayIndex] || 0),
+      precipitation: daily.precipitation_sum[sundayIndex] || 0,
+      uvIndex: daily.uv_index_max[sundayIndex] || 0,
+      visibility: 10,
+      description: this.getWeatherCodeDescription(daily.weather_code[sundayIndex]),
+      icon: this.getWeatherCodeIcon(daily.weather_code[sundayIndex]),
+    };
 
     return {
       current,
-      saturday: this.parseWeatherData(saturdayForecast),
-      sunday: this.parseWeatherData(sundayForecast),
-      hourly: data.list.slice(0, 24).map((item: any) => this.parseWeatherData(item)),
+      saturday,
+      sunday,
+      hourly: [current], // Simplified hourly for now
     };
   }
 
-  private findClosestForecast(forecasts: any[], targetDate: Date): any {
-    const targetTime = new Date(targetDate);
-    targetTime.setHours(12, 0, 0, 0); // Noon
-
-    let closest = forecasts[0];
-    let closestDiff = Math.abs(new Date(closest.dt * 1000).getTime() - targetTime.getTime());
-
-    for (const forecast of forecasts) {
-      const forecastTime = new Date(forecast.dt * 1000);
-      const diff = Math.abs(forecastTime.getTime() - targetTime.getTime());
-      
-      if (diff < closestDiff) {
-        closest = forecast;
-        closestDiff = diff;
-      }
+  private mapWeatherCondition(condition: string | number): WeatherData['condition'] {
+    // Handle both old OpenWeatherMap conditions and new Open-Meteo weather codes
+    if (typeof condition === 'number') {
+      return this.mapWeatherCodeToCondition(condition);
     }
-
-    return closest;
-  }
-
-  private mapWeatherCondition(condition: string): WeatherData['condition'] {
+    
     const conditionMap: Record<string, WeatherData['condition']> = {
       'Clear': 'sunny',
       'Clouds': 'cloudy',

@@ -495,3 +495,4 @@ export const categoryMetadata = {
   adventure: { name: 'Adventure', icon: '🗺️', color: 'amber' },
   creative: { name: 'Creative Arts', icon: '🎪', color: 'rose' },
 } as const;
+

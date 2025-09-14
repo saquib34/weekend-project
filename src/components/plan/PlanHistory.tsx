@@ -29,8 +29,7 @@ export const PlanHistory: React.FC<PlanHistoryProps> = ({ onLoadPlan }) => {
   // Load saved plans on component mount
   useEffect(() => {
     // Plans are already loaded from storage via Zustand persistence
-    console.log('Available saved plans:', savedPlans.length);
-  }, [savedPlans]);
+      }, [savedPlans]);
 
   const filteredPlans = savedPlans
     .filter(plan => 
@@ -316,3 +315,4 @@ export const PlanHistory: React.FC<PlanHistoryProps> = ({ onLoadPlan }) => {
     </div>
   );
 };
+

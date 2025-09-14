@@ -276,3 +276,4 @@ Would you like me to adjust anything or add more activities?`;
     </div>
   );
 };
+

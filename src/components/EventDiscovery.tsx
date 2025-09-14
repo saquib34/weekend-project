@@ -276,3 +276,4 @@ export const EventDiscovery: React.FC<EventDiscoveryProps> = ({
     </div>
   );
 };
+

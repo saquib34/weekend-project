@@ -153,8 +153,7 @@ export const useWeatherIntegration = () => {
     try {
       // Mock weather data - in real app, this would call a weather API
       // Location parameter is for future use when implementing real weather API
-      console.log('Weather location:', location);
-      await new Promise(resolve => setTimeout(resolve, 1000));
+            await new Promise(resolve => setTimeout(resolve, 1000));
       
       setWeather({
         saturday: {
@@ -224,8 +223,7 @@ export const useWeatherIntegration = () => {
 export const useAnalytics = () => {
   const trackEvent = useCallback((eventName: string, properties?: Record<string, any>) => {
     // In a real app, this would send to analytics service
-    console.log('Analytics Event:', eventName, properties);
-    
+        
     // Store locally for demo purposes
     const events = JSON.parse(localStorage.getItem('weekendly_analytics') || '[]');
     events.push({
@@ -285,8 +283,7 @@ export const useOfflineSync = () => {
   const syncPendingActions = useCallback(async () => {
     if (isOnline && pendingSync.length > 0) {
       // Process pending sync actions
-      console.log('Syncing pending actions:', pendingSync);
-      
+            
       // Clear pending actions after successful sync
       setPendingSync([]);
     }
@@ -344,3 +341,4 @@ export const useKeyboardShortcuts = () => {
     ],
   };
 };
+

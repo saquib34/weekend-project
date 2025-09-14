@@ -217,3 +217,4 @@ export const LongWeekendSuggestions: React.FC<LongWeekendSuggestionsProps> = ({
     </div>
   );
 };
+

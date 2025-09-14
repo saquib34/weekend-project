@@ -285,8 +285,7 @@ class WeekendAI {
     Your feedback helps us understand that you'd like: ${feedback}`;
   }
 
-  private getFallbackConversationResponse(message: string): string {
-    console.log('Generating fallback response for:', message);
+  private getFallbackConversationResponse(_message: string): string {
     const responses = [
       "That sounds great! What kind of mood are you going for this weekend?",
       "I'd love to help you plan something amazing! Tell me more about your preferences.",
@@ -311,3 +310,4 @@ export const useWeekendAI = () => {
     chat: (conversation: AIConversation, message: string) => weekendAI.generateConversationResponse(conversation, message),
   };
 };
+

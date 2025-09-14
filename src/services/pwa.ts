@@ -34,8 +34,7 @@ class PWAService {
           scope: '/',
         });
 
-        console.log('Service Worker registered successfully:', registration);
-
+        
         // Handle service worker updates
         registration.addEventListener('updatefound', () => {
           const newWorker = registration.installing;
@@ -78,8 +77,7 @@ class PWAService {
 
     // App installed
     window.addEventListener('appinstalled', () => {
-      console.log('PWA was installed');
-      this.isInstalled = true;
+            this.isInstalled = true;
       this.deferredPrompt = null;
       this.emit('app-installed');
     });
@@ -135,12 +133,10 @@ class PWAService {
       const choiceResult = await this.deferredPrompt.userChoice;
       
       if (choiceResult.outcome === 'accepted') {
-        console.log('User accepted the install prompt');
-        this.emit('install-accepted');
+                this.emit('install-accepted');
         return true;
       } else {
-        console.log('User dismissed the install prompt');
-        this.emit('install-dismissed');
+                this.emit('install-dismissed');
         return false;
       }
     } catch (error) {
@@ -207,8 +203,7 @@ class PWAService {
         });
       }
 
-      console.log('Push subscription created:', subscription);
-      this.emit('push-subscription-created', { subscription });
+            this.emit('push-subscription-created', { subscription });
       return subscription;
     } catch (error) {
       console.error('Failed to subscribe to push notifications:', error);
@@ -297,8 +292,7 @@ class PWAService {
         this.emit('sync-failed', data.payload);
         break;
       default:
-        console.log('Unknown service worker message:', data);
-    }
+            }
   }
 
   /**
@@ -311,8 +305,7 @@ class PWAService {
         const syncRegistration = registration as any;
         if (syncRegistration.sync) {
           await syncRegistration.sync.register('weekend-plan-sync');
-          console.log('Background sync registered');
-        }
+                  }
       } catch (error) {
         console.error('Background sync registration failed:', error);
       }
@@ -455,3 +448,4 @@ export const pwaService = new PWAService();
 // Export types
 export type PWACapabilities = ReturnType<PWAService['getCapabilities']>;
 export type InstallInstructions = ReturnType<PWAService['getInstallInstructions']>;
+

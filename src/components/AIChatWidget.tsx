@@ -244,3 +244,4 @@ export const AIChatWidget: React.FC<AIChatWidgetProps> = ({
     </AnimatePresence>
   );
 };
+

@@ -92,8 +92,7 @@ class HolidayService {
           latitude: locationData.latitude || 0,
           longitude: locationData.longitude || 0,
         };
-        console.log('Location detected:', this.userLocation);
-        return;
+                return;
       }
     } catch (error) {
       console.warn('IP geolocation failed:', error);
@@ -165,8 +164,7 @@ class HolidayService {
       // Try to verify a few major holidays for accuracy
       await this.verifyMajorHolidays();
       
-      console.log(`Loaded ${this.holidays.length} holidays for ${this.userLocation.country}`);
-    } catch (error) {
+          } catch (error) {
       console.error('Failed to load holidays from API:', error);
       this.initializeHolidays();
     }
@@ -617,3 +615,4 @@ class HolidayService {
 }
 
 export const holidayService = new HolidayService();
+

@@ -300,7 +300,6 @@ export const useWeekendPlanStore = create<WeekendPlanState>()(
           // Save to offline storage first
           try {
             await offlineStorageService.savePlan(planToSave);
-            console.log('✅ Plan saved successfully:', planToSave.title);
             
             // Update in-memory state
             set((currentState) => {
@@ -501,3 +500,4 @@ export const useWeekendPlanStore = create<WeekendPlanState>()(
     )
   )
 );
+

@@ -120,8 +120,7 @@ export const GoogleMapComponent: React.FC<GoogleMapComponentProps> = ({
       directionsRendererRef.current.setMap(googleMapRef.current);
 
       setIsLoaded(true);
-      console.log('Google Maps initialized successfully');
-    } catch (err) {
+          } catch (err) {
       setError('Failed to initialize Google Maps');
       console.error('Map initialization error:', err);
     }
@@ -540,3 +539,4 @@ export const GoogleMapComponent: React.FC<GoogleMapComponentProps> = ({
 };
 
 export default GoogleMapComponent;
+

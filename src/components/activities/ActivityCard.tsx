@@ -204,3 +204,4 @@ const ActivityCard: React.FC<ActivityCardProps> = ({
 };
 
 export { ActivityCard };
+

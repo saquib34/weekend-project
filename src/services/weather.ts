@@ -507,3 +507,4 @@ export const getWeatherDescription = (weather: WeatherData): string => {
     return `${condition.charAt(0).toUpperCase() + condition.slice(1)}, ${temperature}°C`;
   }
 };
+

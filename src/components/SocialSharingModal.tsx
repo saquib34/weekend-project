@@ -443,3 +443,4 @@ const PlanImagePreview: React.FC<{ plan: WeekendPlan }> = ({ plan }) => {
     </div>
   );
 };
+

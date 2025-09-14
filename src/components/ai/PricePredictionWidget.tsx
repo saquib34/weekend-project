@@ -295,3 +295,4 @@ export const PricePredictionWidget: React.FC<PricePredictionWidgetProps> = ({
     </div>
   );
 };
+

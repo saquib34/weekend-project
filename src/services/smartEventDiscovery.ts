@@ -142,8 +142,7 @@ class SmartEventDiscoveryService {
     if (this.isCacheValid(cacheKey)) {
       const cached = this.cachedEvents.get(cacheKey);
       if (cached) {
-        console.log('Returning cached events');
-        return cached;
+                return cached;
       }
     }
 
@@ -260,8 +259,7 @@ class SmartEventDiscoveryService {
   // Mock Meetup implementation (implement when API key available)
   private async fetchFromMeetup(options: EventDiscoveryOptions): Promise<DiscoveredEvent[]> {
     // Placeholder for Meetup API integration
-    console.log('Meetup API integration pending');
-    return this.getMockMeetupEvents(options);
+        return this.getMockMeetupEvents(options);
   }
 
   // Convert Eventbrite API response to our format
@@ -649,3 +647,4 @@ class SmartEventDiscoveryService {
 }
 
 export const smartEventDiscovery = new SmartEventDiscoveryService();
+

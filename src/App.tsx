@@ -190,8 +190,8 @@ function App() {
     // Get AI recommendations for the new plan
     if (currentWeather) {
       try {
-        // For now, just log that we would get AI recommendations
-        console.log('Would get AI recommendations for mood:', mood, 'weather:', currentWeather, 'weekend type:', weekendType);
+        // AI recommendations could be implemented here
+        // const recommendations = await aiService.getRecommendations({...});
       } catch (error) {
         console.error('Failed to get AI recommendations:', error);
       }
@@ -199,26 +199,20 @@ function App() {
   }, [createNewPlan, currentWeather]);
 
   const handleDragEnd = useCallback((result: DropResult) => {
-    const { destination, draggableId, source } = result;
-    
-    console.log('Drag end:', { destination, draggableId, source, currentPlan });
+    const { destination, draggableId } = result;
 
     if (!destination) {
-      console.log('No destination for drop');
       return;
     }
     
     // Auto-create a plan if none exists
     if (!currentPlan) {
-      console.log('No current plan, creating one...');
       createNewPlan('energetic', 'My Weekend Plan');
-      console.log('Auto-created plan for drag and drop');
       // The plan will be available after the state update, so we need to exit and let the user try again
       return;
     }
 
     const destDroppableId = destination.droppableId;
-    console.log('Dropping to:', destDroppableId);
     
     // Only handle drops to schedule slots
     if (destDroppableId.includes('-')) {
@@ -226,13 +220,8 @@ function App() {
       const parts = destDroppableId.split('-');
       const day = parts[0] as WeekendDay;
       const timeSlot = parts.slice(1).join('-') as TimeSlot; // Rejoin timeSlot parts
-      console.log('Adding activity:', { draggableId, day, timeSlot });
       
       addActivityToSchedule(draggableId, day, timeSlot);
-      
-      console.log('Activity added successfully');
-    } else {
-      console.log('Drop target is not a schedule slot:', destDroppableId);
     }
   }, [currentPlan, addActivityToSchedule]);
 
@@ -728,3 +717,4 @@ function App() {
 }
 
 export default App;
+

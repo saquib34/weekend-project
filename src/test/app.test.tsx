@@ -23,3 +23,4 @@ describe('Weekend Harmony App', () => {
     expect(plan.mood).toBe('relaxed')
   })
 })
+

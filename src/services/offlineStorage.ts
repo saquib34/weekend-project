@@ -39,8 +39,7 @@ class OfflineStorageService {
 
       request.onsuccess = (event) => {
         this.db = (event.target as IDBOpenDBRequest).result;
-        console.log('Offline storage database initialized');
-        resolve();
+                resolve();
       };
 
       request.onupgradeneeded = (event) => {
@@ -73,8 +72,7 @@ class OfflineStorageService {
           db.createObjectStore('userPreferences', { keyPath: 'key' });
         }
 
-        console.log('Database schema updated');
-      };
+              };
     });
   }
 
@@ -116,8 +114,7 @@ class OfflineStorageService {
       const request = store.put(enhancedPlan);
 
       request.onsuccess = () => {
-        console.log('Plan saved offline:', plan.id);
-        
+                
         // Add to sync queue if offline or forced
         if (!this.isOnline || forceOffline) {
           this.addToSyncQueue('save-plan', { planId: plan.id });
@@ -156,8 +153,7 @@ class OfflineStorageService {
           return cleanPlan as WeekendPlan;
         });
 
-        console.log(`Loaded ${cleanPlans.length} plans from offline storage`);
-        resolve(cleanPlans);
+                resolve(cleanPlans);
       };
 
       request.onerror = () => {
@@ -210,8 +206,7 @@ class OfflineStorageService {
       const request = store.delete(planId);
 
       request.onsuccess = () => {
-        console.log('Plan deleted from offline storage:', planId);
-        
+                
         // Add to sync queue for deletion
         if (!this.isOnline) {
           this.addToSyncQueue('delete-plan', { planId });
@@ -254,8 +249,7 @@ class OfflineStorageService {
         request.onsuccess = () => {
           completed++;
           if (completed === total) {
-            console.log(`Cached ${total} activities for offline use`);
-            resolve();
+                        resolve();
           }
         };
 
@@ -289,8 +283,7 @@ class OfflineStorageService {
           return cleanActivity;
         });
         
-        console.log(`Retrieved ${activities.length} cached activities`);
-        resolve(activities);
+                resolve(activities);
       };
 
       request.onerror = () => {
@@ -320,8 +313,7 @@ class OfflineStorageService {
       const request = store.add(syncItem);
 
       request.onsuccess = () => {
-        console.log('Added to sync queue:', action);
-        resolve();
+                resolve();
       };
 
       request.onerror = () => {
@@ -343,8 +335,7 @@ class OfflineStorageService {
 
       request.onsuccess = async () => {
         const syncItems = request.result;
-        console.log(`Processing ${syncItems.length} sync queue items`);
-
+        
         for (const item of syncItems) {
           try {
             await this.processSyncItem(item);
@@ -352,8 +343,7 @@ class OfflineStorageService {
             // Remove from queue after successful sync
             const deleteRequest = store.delete(item.id);
             deleteRequest.onsuccess = () => {
-              console.log('Sync item processed and removed:', item.action);
-            };
+                          };
           } catch (error) {
             console.error('Failed to sync item:', item, error);
             
@@ -385,8 +375,7 @@ class OfflineStorageService {
   private async processSyncItem(item: any): Promise<void> {
     // This would integrate with your backend API
     // For now, we'll just simulate the sync
-    console.log('Simulating sync for:', item.action, item.data);
-    
+        
     // In a real implementation, you'd make API calls here
     // await apiService.syncPlan(item.data.planId);
   }
@@ -440,8 +429,7 @@ class OfflineStorageService {
         request.onsuccess = () => {
           completed++;
           if (completed === stores.length) {
-            console.log('All offline data cleared');
-            this.emit('data-cleared');
+                        this.emit('data-cleared');
             resolve();
           }
         };
@@ -514,3 +502,4 @@ class OfflineStorageService {
 // Create and export singleton instance
 export const offlineStorageService = new OfflineStorageService();
 export default offlineStorageService;
+

@@ -125,8 +125,7 @@ export const useEmotionDetection = (options: UseEmotionDetectionOptions) => {
       // Race between model loading and timeout
       await Promise.race([modelLoading, modelLoadTimeout]);
       setModelsLoaded(true);
-      console.log('Face-api models loaded successfully');
-    } catch (error) {
+          } catch (error) {
       // Models not available - use fallback mode silently
       // This is expected behavior when face-api models aren't installed
     } finally {
@@ -376,3 +375,4 @@ export const useEmotionBasedRecommendations = () => {
 };
 
 export type { EmotionData, DetectionResult, UseEmotionDetectionOptions };
+

@@ -341,3 +341,4 @@ export const useUndoRedo = <T>(initialState: T, maxHistorySize = 50) => {
     historySize: history.length,
   };
 };
+

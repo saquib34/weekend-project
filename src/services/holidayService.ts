@@ -159,14 +159,11 @@ class HolidayService {
     if (!this.userLocation) return;
 
     try {
-      const years = [this.currentYear, this.currentYear + 1];
-      const holidayPromises = years.map(year => this.fetchHolidaysForYear(year));
+    
+      this.initializeHolidays();
       
-      const allHolidays = await Promise.all(holidayPromises);
-      this.holidays = allHolidays.flat();
-      
-      // Sort holidays by date
-      this.holidays.sort((a, b) => a.date.getTime() - b.date.getTime());
+      // Try to verify a few major holidays for accuracy
+      await this.verifyMajorHolidays();
       
       console.log(`Loaded ${this.holidays.length} holidays for ${this.userLocation.country}`);
     } catch (error) {
@@ -175,24 +172,47 @@ class HolidayService {
     }
   }
 
-  private async fetchHolidaysForYear(year: number): Promise<Holiday[]> {
-    if (!this.userLocation) return [];
+  private async verifyMajorHolidays(): Promise<void> {
+    // Try to verify a few major holidays using individual day queries
+    const majorHolidayDates = [
+      { month: 1, day: 1, name: "New Year's Day" },
+      { month: 12, day: 25, name: "Christmas Day" },
+      { month: 1, day: 26, name: "Republic Day" }, // India specific
+      { month: 8, day: 15, name: "Independence Day" }, // India specific
+    ];
 
-    try {
-      const url = `https://holidays.abstractapi.com/v1/?api_key=${this.abstractApiKey}&country=${this.userLocation.countryCode}&year=${year}`;
-      const response = await fetch(url);
-      
-      if (!response.ok) {
-        throw new Error(`API request failed: ${response.status}`);
+    for (const holidayDate of majorHolidayDates) {
+      try {
+        const date = new Date(this.currentYear, holidayDate.month - 1, holidayDate.day);
+        
+        const url = `https://holidays.abstractapi.com/v1/?api_key=${this.abstractApiKey}&country=${this.userLocation?.countryCode}&year=${this.currentYear}&month=${holidayDate.month}&day=${holidayDate.day}`;
+        const response = await fetch(url);
+        
+        if (response.ok) {
+          const apiHolidays: AbstractApiHoliday[] = await response.json();
+          if (Array.isArray(apiHolidays) && apiHolidays.length > 0) {
+            // Update the fallback holiday with API data
+            const existingHolidayIndex = this.holidays.findIndex(h => 
+              h.date.getMonth() === date.getMonth() && h.date.getDate() === date.getDate()
+            );
+            
+            if (existingHolidayIndex >= 0) {
+              this.holidays[existingHolidayIndex] = this.convertApiHolidayToHoliday(apiHolidays[0]);
+            } else {
+              this.holidays.push(this.convertApiHolidayToHoliday(apiHolidays[0]));
+            }
+          }
+        }
+        
+        // Add small delay to avoid rate limiting
+        await new Promise(resolve => setTimeout(resolve, 100));
+      } catch (error) {
+        console.warn(`Failed to verify holiday on ${holidayDate.month}/${holidayDate.day}:`, error);
       }
-
-      const apiHolidays: AbstractApiHoliday[] = await response.json();
-      
-      return apiHolidays.map(holiday => this.convertApiHolidayToHoliday(holiday));
-    } catch (error) {
-      console.error(`Failed to fetch holidays for ${year}:`, error);
-      return [];
     }
+    
+    // Sort holidays by date after verification
+    this.holidays.sort((a, b) => a.date.getTime() - b.date.getTime());
   }
 
   private convertApiHolidayToHoliday(apiHoliday: AbstractApiHoliday): Holiday {
@@ -252,12 +272,13 @@ class HolidayService {
   }
 
   private initializeHolidays() {
-    // Minimal fallback holidays when API is not available
+    // Comprehensive fallback holidays when API is not available
     const currentYear = this.currentYear;
     const fallbackCountry = this.userLocation?.country || 'India';
     
-    // Only add a few major holidays as fallback
+    // Major holidays for India (and some international ones)
     this.holidays = [
+      // Universal holidays
       {
         name: "New Year's Day",
         date: new Date(currentYear, 0, 1),
@@ -274,7 +295,52 @@ class HolidayService {
         isLongWeekendOpportunity: true,
         suggestedWeekendType: 'extended' as const
       },
-      // Next year
+      
+      // India-specific holidays (if in India)
+      ...(this.userLocation?.countryCode === 'IN' ? [
+        {
+          name: "Republic Day",
+          date: new Date(currentYear, 0, 26),
+          type: 'national' as const,
+          country: fallbackCountry,
+          isLongWeekendOpportunity: true,
+          suggestedWeekendType: 'long' as const
+        },
+        {
+          name: "Independence Day",
+          date: new Date(currentYear, 7, 15),
+          type: 'national' as const,
+          country: fallbackCountry,
+          isLongWeekendOpportunity: true,
+          suggestedWeekendType: 'long' as const
+        },
+        {
+          name: "Gandhi Jayanti",
+          date: new Date(currentYear, 9, 2),
+          type: 'national' as const,
+          country: fallbackCountry,
+          isLongWeekendOpportunity: true,
+          suggestedWeekendType: 'long' as const
+        },
+        {
+          name: "Diwali",
+          date: new Date(currentYear, 10, 12), // Approximate - varies each year
+          type: 'religious' as const,
+          country: fallbackCountry,
+          isLongWeekendOpportunity: true,
+          suggestedWeekendType: 'extended' as const
+        },
+        {
+          name: "Holi",
+          date: new Date(currentYear, 2, 14), // Approximate - varies each year
+          type: 'religious' as const,
+          country: fallbackCountry,
+          isLongWeekendOpportunity: true,
+          suggestedWeekendType: 'long' as const
+        }
+      ] : []),
+      
+      // Next year holidays
       {
         name: "New Year's Day",
         date: new Date(currentYear + 1, 0, 1),
@@ -282,7 +348,18 @@ class HolidayService {
         country: fallbackCountry,
         isLongWeekendOpportunity: true,
         suggestedWeekendType: 'long' as const
-      }
+      },
+      
+      ...(this.userLocation?.countryCode === 'IN' ? [
+        {
+          name: "Republic Day",
+          date: new Date(currentYear + 1, 0, 26),
+          type: 'national' as const,
+          country: fallbackCountry,
+          isLongWeekendOpportunity: true,
+          suggestedWeekendType: 'long' as const
+        }
+      ] : [])
     ];
 
     // Sort holidays by date

@@ -92,8 +92,14 @@ class LocationMappingService {
   private mockMode: boolean = true; // Default to mock mode
 
   constructor(apiKey?: string) {
-    this.apiKey = apiKey || process.env.VITE_GOOGLE_MAPS_API_KEY || '';
+    this.apiKey = apiKey || import.meta.env.VITE_GOOGLE_MAPS_API_KEY || '';
     this.mockMode = !this.apiKey;
+    
+    console.log('LocationMappingService initialized:', { 
+      hasApiKey: !!this.apiKey, 
+      mockMode: this.mockMode,
+      apiKeyLength: this.apiKey.length 
+    });
     
     if (!this.mockMode) {
       this.initializeGoogleMaps();

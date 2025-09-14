@@ -2,6 +2,7 @@ import React, { useState, useEffect, useRef } from 'react';
 import { useActivityStore } from '../../stores/activityStore';
 import type { ScheduledActivity } from '../../types';
 import type { Location, DirectionsResult, NearbyPlace } from '../../services/locationMappingService';
+import GoogleMapComponent from './GoogleMapComponent';
 
 interface InteractiveMapProps {
   activities?: ScheduledActivity[];
@@ -40,6 +41,25 @@ export const InteractiveMap: React.FC<InteractiveMapProps> = ({
   const mapRef = useRef<HTMLDivElement>(null);
   const { getActivityById } = useActivityStore();
 
+  // Check if Google Maps API key is available
+  const hasGoogleMapsApiKey = !!import.meta.env.VITE_GOOGLE_MAPS_API_KEY;
+
+  // If Google Maps API key is available, use the real Google Maps component
+  if (hasGoogleMapsApiKey) {
+    return (
+      <GoogleMapComponent
+        activities={activities}
+        centerLocation={centerLocation}
+        showRoute={showRoute}
+        showNearbyPlaces={showNearbyPlaces}
+        onLocationSelect={onLocationSelect}
+        className={className}
+        height={height}
+      />
+    );
+  }
+
+  // Fallback to mock map implementation
   useEffect(() => {
     initializeMap();
   }, [activities, centerLocation, showRoute, showNearbyPlaces]);

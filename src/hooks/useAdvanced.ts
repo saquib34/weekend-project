@@ -147,7 +147,7 @@ export const useWeatherIntegration = () => {
   } | null>(null);
   const [loading, setLoading] = useState(false);
 
-  const fetchWeather = useCallback(async (location?: { lat: number; lng: number }) => {
+  const fetchWeather = useCallback(async (_location?: { lat: number; lng: number }) => {
     setLoading(true);
     
     try {

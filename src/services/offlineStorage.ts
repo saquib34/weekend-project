@@ -338,7 +338,6 @@ class OfflineStorageService {
         
         for (const item of syncItems) {
           try {
-            await this.processSyncItem(item);
             
             // Remove from queue after successful sync
             const deleteRequest = store.delete(item.id);
@@ -372,13 +371,6 @@ class OfflineStorageService {
   /**
    * Process individual sync item
    */
-  private async processSyncItem(item: any): Promise<void> {
-    // This would integrate with your backend API
-    // For now, we'll just simulate the sync
-        
-    // In a real implementation, you'd make API calls here
-    // await apiService.syncPlan(item.data.planId);
-  }
 
   /**
    * Get sync status

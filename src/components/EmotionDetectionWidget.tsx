@@ -92,5 +92,146 @@ export const EmotionDetectionWidget: React.FC<EmotionDetectionWidgetProps> = ({
         muted
         playsInline
         className="hidden"
-        onLoadedData={() => };
+        onLoadedData={() => {}}
+      />
 
+      {/* Emotion Status Panel */}
+      <div className="bg-white rounded-lg p-4 border border-gray-200">
+        <div className="flex items-center justify-between mb-3">
+          <div className="flex items-center gap-2">
+            <div className="text-lg">😊</div>
+            <h3 className="font-medium text-gray-900">Mood Detection</h3>
+          </div>
+          <div className="flex items-center gap-2">
+            <div className={`w-2 h-2 rounded-full ${
+              isActive ? 'bg-green-500' : isLoading ? 'bg-yellow-500' : 'bg-gray-400'
+            }`} />
+            <span className="text-xs text-gray-500">
+              {isActive ? 'Active' : isLoading ? 'Loading' : 'Inactive'}
+            </span>
+          </div>
+        </div>
+
+        {/* Current Mood Display */}
+        {lastDetection && (
+          <div className="space-y-2">
+            <div className="flex items-center justify-between">
+              <span className="text-sm text-gray-600">Current Mood:</span>
+              <div className="flex items-center gap-2">
+                <span className="text-lg">{getMoodEmoji(lastDetection.dominantEmotion)}</span>
+                <span className="font-medium text-gray-900 capitalize">
+                  {lastDetection.dominantEmotion}
+                </span>
+                <span className="text-xs text-gray-500">
+                  {Math.round(lastDetection.confidence)}%
+                </span>
+              </div>
+            </div>
+            
+            {/* Mood Confidence Bar */}
+            <div className="w-full bg-gray-200 rounded-full h-2">
+              <div 
+                className={`h-2 rounded-full transition-all duration-300 ${
+                  getMoodColor(lastDetection.dominantEmotion)
+                }`}
+                style={{ width: `${lastDetection.confidence}%` }}
+              />
+            </div>
+          </div>
+        )}
+
+        {/* No Detection State */}
+        {!lastDetection && isActive && (
+          <div className="text-center py-4">
+            <div className="text-3xl mb-2">🤔</div>
+            <p className="text-sm text-gray-600">
+              Analyzing your mood...
+            </p>
+          </div>
+        )}
+
+        {/* Camera Permission / Error States */}
+        {!hasCamera && (
+          <div className="text-center py-4">
+            <div className="text-2xl mb-2">📷</div>
+            <p className="text-sm text-gray-600 mb-2">
+              Camera access needed for emotion detection
+            </p>
+            <button
+              onClick={startDetection}
+              className="px-3 py-1 bg-blue-600 text-white rounded text-sm hover:bg-blue-700"
+            >
+              Allow Camera Access
+            </button>
+          </div>
+        )}
+
+        {/* Controls */}
+        <div className="flex justify-between items-center mt-4 pt-3 border-t border-gray-100">
+          <div className="text-xs text-gray-500">
+            {hasCamera ? 'Using camera detection' : 'Smart detection active'}
+          </div>
+          <div className="flex gap-2">
+            {!isActive && hasCamera && (
+              <button
+                onClick={startDetection}
+                className="px-2 py-1 text-xs bg-green-100 text-green-800 rounded hover:bg-green-200"
+              >
+                Start
+              </button>
+            )}
+            {isActive && (
+              <button
+                onClick={stopDetection}
+                className="px-2 py-1 text-xs bg-red-100 text-red-800 rounded hover:bg-red-200"
+              >
+                Stop
+              </button>
+            )}
+            <button
+              onClick={handleDisableDetection}
+              className="px-2 py-1 text-xs bg-gray-100 text-gray-600 rounded hover:bg-gray-200"
+            >
+              Disable
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+};
+
+// Helper functions for mood display
+function getMoodEmoji(emotion: string): string {
+  const moodEmojis: Record<string, string> = {
+    happy: '😊',
+    sad: '😢',
+    angry: '😠',
+    surprised: '😲',
+    fearful: '😨',
+    disgusted: '🤢',
+    neutral: '😐',
+    relaxed: '😌',
+    excited: '🤩',
+    focused: '🧐'
+  };
+  return moodEmojis[emotion] || '😊';
+}
+
+function getMoodColor(emotion: string): string {
+  const moodColors: Record<string, string> = {
+    happy: 'bg-green-500',
+    relaxed: 'bg-blue-500',
+    excited: 'bg-yellow-500',
+    focused: 'bg-purple-500',
+    sad: 'bg-blue-300',
+    angry: 'bg-red-500',
+    surprised: 'bg-orange-500',
+    fearful: 'bg-gray-500',
+    disgusted: 'bg-brown-500',
+    neutral: 'bg-gray-400'
+  };
+  return moodColors[emotion] || 'bg-gray-400';
+}
+
+export default EmotionDetectionWidget;

@@ -2,7 +2,7 @@ import React, { useState, useEffect, useRef } from 'react';
 import { useActivityStore } from '../../stores/activityStore';
 import type { ScheduledActivity } from '../../types';
 import type { Location, DirectionsResult, NearbyPlace } from '../../services/locationMappingService';
-import GoogleMapComponent from './GoogleMapComponent';
+import { ModernGoogleMap } from './ModernGoogleMap';
 
 interface InteractiveMapProps {
   activities?: ScheduledActivity[];
@@ -47,7 +47,7 @@ export const InteractiveMap: React.FC<InteractiveMapProps> = ({
   // If Google Maps API key is available, use the real Google Maps component
   if (hasGoogleMapsApiKey) {
     return (
-      <GoogleMapComponent
+      <ModernGoogleMap
         activities={activities}
         centerLocation={centerLocation}
         showRoute={showRoute}

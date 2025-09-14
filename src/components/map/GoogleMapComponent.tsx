@@ -1,6 +1,7 @@
 import React, { useEffect, useRef, useState } from 'react';
 import type { ScheduledActivity } from '../../types';
 import { useActivityStore } from '../../stores/activityStore';
+import { googleMapsLoader } from '../../utils/googleMapsLoader';
 
 interface GoogleMapComponentProps {
   activities?: ScheduledActivity[];
@@ -57,43 +58,61 @@ export const GoogleMapComponent: React.FC<GoogleMapComponentProps> = ({
     }
   }, [activities, centerLocation, showRoute, showNearbyPlaces, isLoaded]);
 
+  // Additional effect to handle DOM readiness
+  useEffect(() => {
+    if (mapRef.current && window.google && window.google.maps && !googleMapRef.current) {
+      console.log('DOM and Google Maps ready, but map not initialized. Retrying...');
+      setTimeout(() => {
+        initializeMap();
+      }, 100);
+    }
+  }, [mapRef.current, isLoaded]);
+
   const loadGoogleMaps = async () => {
     try {
-      const apiKey = import.meta.env.VITE_GOOGLE_MAPS_API_KEY;
-      if (!apiKey) {
-        throw new Error('Google Maps API key not found');
-      }
-
-      // Check if Google Maps is already loaded
-      if (window.google && window.google.maps) {
-        initializeMap();
-        return;
-      }
-
-      // Load Google Maps API
-      const script = document.createElement('script');
-      script.src = `https://maps.googleapis.com/maps/api/js?key=${apiKey}&libraries=places,geometry`;
-      script.async = true;
-      script.defer = true;
+      console.log('Loading Google Maps...');
+      await googleMapsLoader.load();
+      console.log('Google Maps loaded, waiting for DOM...');
       
-      script.onload = () => {
+      // Wait a bit to ensure DOM is ready
+      setTimeout(() => {
         initializeMap();
-      };
-      
-      script.onerror = () => {
-        setError('Failed to load Google Maps');
-      };
-
-      document.head.appendChild(script);
+      }, 50);
     } catch (err) {
+      console.error('Failed to load Google Maps:', err);
       setError(err instanceof Error ? err.message : 'Failed to load Google Maps');
     }
   };
 
   const initializeMap = () => {
-    if (!mapRef.current || !window.google) return;
+    console.log('Initializing map, mapRef.current:', mapRef.current);
+    
+    if (!mapRef.current) {
+      console.error('Map container not found');
+      // Retry after a short delay
+      setTimeout(() => {
+        if (mapRef.current) {
+          initializeMap();
+        } else {
+          setError('Map container not found');
+        }
+      }, 100);
+      return;
+    }
+    
+    if (!window.google) {
+      setError('Google Maps API not loaded');
+      return;
+    }
+
+    if (!window.google.maps) {
+      setError('Google Maps API not ready');
+      return;
+    }
 
     try {
+      console.log('Creating Google Map with center:', centerLocation);
+      
       // Create the map
       googleMapRef.current = new window.google.maps.Map(mapRef.current, {
         center: centerLocation,
@@ -119,10 +138,12 @@ export const GoogleMapComponent: React.FC<GoogleMapComponentProps> = ({
       });
       directionsRendererRef.current.setMap(googleMapRef.current);
 
+      console.log('Map initialized successfully');
       setIsLoaded(true);
-          } catch (err) {
-      setError('Failed to initialize Google Maps');
+      setError(null);
+    } catch (err) {
       console.error('Map initialization error:', err);
+      setError('Failed to initialize Google Maps');
     }
   };
 

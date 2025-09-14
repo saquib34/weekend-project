@@ -1,0 +1,80 @@
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Poppins:wght@400;500;600;700;800&display=swap');
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  html {
+    font-family: 'Inter', system-ui, sans-serif;
+    overflow-x: hidden;
+  }
+  
+  body {
+    @apply bg-gradient-to-br from-blue-50 via-white to-purple-50 min-h-screen;
+    overflow-x: hidden;
+  }
+}
+
+@layer components {
+  .btn-primary {
+    @apply bg-primary-500 hover:bg-primary-600 text-white font-medium px-6 py-3 rounded-xl transition-all duration-200 shadow-soft hover:shadow-medium transform hover:scale-105 active:scale-95;
+  }
+  
+  .btn-secondary {
+    @apply bg-white hover:bg-gray-50 text-gray-700 font-medium px-6 py-3 rounded-xl border border-gray-200 transition-all duration-200 shadow-soft hover:shadow-medium transform hover:scale-105 active:scale-95;
+  }
+  
+  .card {
+    @apply bg-white rounded-2xl shadow-soft hover:shadow-medium transition-all duration-300 border border-gray-100;
+  }
+  
+  .activity-card {
+    @apply card p-4 cursor-pointer transform hover:scale-105 transition-all duration-200;
+  }
+  
+  .schedule-slot {
+    @apply card p-3 min-h-[80px] border-2 border-dashed border-gray-200 hover:border-primary-300 transition-all duration-200;
+  }
+  
+  .gradient-text {
+    @apply bg-gradient-to-r from-primary-500 to-secondary-500 bg-clip-text text-transparent;
+  }
+  
+  .floating-action {
+    @apply fixed bottom-6 right-6 bg-primary-500 hover:bg-primary-600 text-white p-4 rounded-full shadow-strong hover:shadow-xl transform hover:scale-110 active:scale-95 transition-all duration-200 z-50;
+  }
+}
+
+@layer utilities {
+  .text-balance {
+    text-wrap: balance;
+  }
+  
+  .scrollbar-hide {
+    -ms-overflow-style: none;
+    scrollbar-width: none;
+  }
+  
+  .scrollbar-hide::-webkit-scrollbar {
+    display: none;
+  }
+}
+
+/* Custom scrollbar for webkit browsers */
+::-webkit-scrollbar {
+  width: 6px;
+}
+
+::-webkit-scrollbar-track {
+  background: #f1f5f9;
+  border-radius: 3px;
+}
+
+::-webkit-scrollbar-thumb {
+  background: #cbd5e1;
+  border-radius: 3px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: #94a3b8;
+}

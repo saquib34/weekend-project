@@ -1,0 +1,156 @@
+{
+  "name": "Weekendly - Smart Weekend Planner",
+  "short_name": "Weekendly",
+  "description": "AI-powered weekend planning app with emotion detection, weather intelligence, and social sharing",
+  "version": "1.0.0",
+  "theme_color": "#3B82F6",
+  "background_color": "#F8FAFC",
+  "display": "standalone",
+  "orientation": "portrait",
+  "scope": "/",
+  "start_url": "/",
+  "id": "weekendly-app",
+  "categories": ["lifestyle", "productivity", "social"],
+  "screenshots": [
+    {
+      "src": "/screenshots/desktop-home.png",
+      "type": "image/png",
+      "sizes": "1280x720",
+      "form_factor": "wide",
+      "label": "Weekendly homepage"
+    },
+    {
+      "src": "/screenshots/mobile-schedule.png", 
+      "type": "image/png",
+      "sizes": "393x852",
+      "form_factor": "narrow",
+      "label": "Weekend schedule view"
+    }
+  ],
+  "icons": [
+    {
+      "src": "/icons/icon-72x72.png",
+      "sizes": "72x72",
+      "type": "image/png",
+      "purpose": "maskable any"
+    },
+    {
+      "src": "/icons/icon-96x96.png",
+      "sizes": "96x96",
+      "type": "image/png",
+      "purpose": "maskable any"
+    },
+    {
+      "src": "/icons/icon-128x128.png",
+      "sizes": "128x128",
+      "type": "image/png",
+      "purpose": "maskable any"
+    },
+    {
+      "src": "/icons/icon-144x144.png",
+      "sizes": "144x144",
+      "type": "image/png",
+      "purpose": "maskable any"
+    },
+    {
+      "src": "/icons/icon-152x152.png",
+      "sizes": "152x152",
+      "type": "image/png",
+      "purpose": "maskable any"
+    },
+    {
+      "src": "/icons/icon-192x192.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "maskable any"
+    },
+    {
+      "src": "/icons/icon-384x384.png",
+      "sizes": "384x384",
+      "type": "image/png",
+      "purpose": "maskable any"
+    },
+    {
+      "src": "/icons/icon-512x512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "maskable any"
+    }
+  ],
+  "shortcuts": [
+    {
+      "name": "Create New Plan",
+      "short_name": "New Plan",
+      "description": "Start planning a new weekend",
+      "url": "/create",
+      "icons": [
+        {
+          "src": "/icons/shortcut-new.png",
+          "sizes": "96x96"
+        }
+      ]
+    },
+    {
+      "name": "Browse Activities", 
+      "short_name": "Activities",
+      "description": "Explore weekend activities",
+      "url": "/activities",
+      "icons": [
+        {
+          "src": "/icons/shortcut-browse.png",
+          "sizes": "96x96"
+        }
+      ]
+    },
+    {
+      "name": "My Plans",
+      "short_name": "Plans", 
+      "description": "View saved weekend plans",
+      "url": "/plans",
+      "icons": [
+        {
+          "src": "/icons/shortcut-plans.png",
+          "sizes": "96x96"
+        }
+      ]
+    }
+  ],
+  "related_applications": [],
+  "prefer_related_applications": false,
+  "features": [
+    "ai-recommendations",
+    "emotion-detection", 
+    "weather-integration",
+    "social-sharing",
+    "offline-support"
+  ],
+  "edge_side_panel": {
+    "preferred_width": 400
+  },
+  "handle_links": "preferred",
+  "launch_handler": {
+    "client_mode": "focus-existing"
+  },
+  "protocol_handlers": [
+    {
+      "protocol": "web+weekendly",
+      "url": "/share?plan=%s"
+    }
+  ],
+  "share_target": {
+    "action": "/share",
+    "method": "POST", 
+    "enctype": "multipart/form-data",
+    "params": {
+      "title": "title",
+      "text": "text",
+      "url": "url",
+      "files": [
+        {
+          "name": "files",
+          "accept": ["image/*", ".pdf"]
+        }
+      ]
+    }
+  }
+}
